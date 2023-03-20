@@ -6,12 +6,8 @@ public class Product
 
     public double Price { get; set; }
 
-    public Product()
-    {
-    }
-
     public override string ToString()
     {
-        return $"{this.Name}: {this.Price}";
+        return $"{Name}: {Price}";
     }
 }

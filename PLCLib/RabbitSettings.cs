@@ -1,12 +1,14 @@
 ﻿namespace PLCLib;
 
-public class RabbitSettings
+public static class RabbitSettings
 {
     public const string HostName = "localhost";
 
-    public const string ExchangeName = "demo.exchange";
+    public const int Port = 5672;
 
-    public const string QueueName = "demo.queue.log";
+    public const string ExchangeName = "plc.exchange";
 
-    public const string RoutingKey = "demo.queue.*";
+    public const string QueueName = "plc.queue.product";
+
+    public const string RoutingKey = "plc.queue.*";
 }

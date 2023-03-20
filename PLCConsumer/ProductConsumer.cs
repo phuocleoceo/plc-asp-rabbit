@@ -1,5 +1,6 @@
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client;
+using Newtonsoft.Json;
 using System.Text;
 using PLCLib;
 
@@ -19,36 +20,58 @@ public class ProductConsumer : BackgroundService
     {
         ConnectionFactory factory = new ConnectionFactory
         {
-            HostName = RabbitSettings.HostName
+            HostName = RabbitSettings.HostName,
+            Port = RabbitSettings.Port
         };
 
-        // create connection  
         _connection = factory.CreateConnection();
 
-        // create channel
         _channel = _connection.CreateModel();
 
-        _channel.ExchangeDeclare(RabbitSettings.ExchangeName, ExchangeType.Topic);
-        _channel.QueueDeclare(RabbitSettings.QueueName, false, false, false, null);
-        _channel.QueueBind(RabbitSettings.QueueName, RabbitSettings.ExchangeName, RabbitSettings.RoutingKey, null);
-        _channel.BasicQos(0, 1, false);
+        _channel.ExchangeDeclare(
+            exchange: RabbitSettings.ExchangeName,
+            type: ExchangeType.Topic
+        );
+
+        _channel.QueueDeclare(
+            queue: RabbitSettings.QueueName,
+            durable: false,
+            exclusive: false,
+            autoDelete: false,
+            arguments: null
+        );
+
+        _channel.QueueBind(
+            queue: RabbitSettings.QueueName,
+            exchange: RabbitSettings.ExchangeName,
+            routingKey: RabbitSettings.RoutingKey,
+            arguments: null
+        );
+
+        _channel.BasicQos(
+            prefetchSize: 0,
+            prefetchCount: 1,
+            global: false
+        );
 
         _connection.ConnectionShutdown += RabbitMQ_ConnectionShutdown;
     }
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        stoppingToken.ThrowIfCancellationRequested();
+        cancellationToken.ThrowIfCancellationRequested();
 
         EventingBasicConsumer consumer = new EventingBasicConsumer(_channel);
         consumer.Received += (_, ea) =>
         {
-            // received message  
-            string content = Encoding.UTF8.GetString(ea.Body.ToArray());
+            string message = Encoding.UTF8.GetString(ea.Body.ToArray());
 
-            // handle the received message  
-            HandleMessage(content);
-            _channel.BasicAck(ea.DeliveryTag, false);
+            HandleMessage(message);
+
+            _channel.BasicAck(
+                deliveryTag: ea.DeliveryTag,
+                multiple: false
+            );
         };
 
         consumer.Shutdown += OnConsumerShutdown;
@@ -56,13 +79,19 @@ public class ProductConsumer : BackgroundService
         consumer.Unregistered += OnConsumerUnregistered;
         consumer.ConsumerCancelled += OnConsumerConsumerCancelled;
 
-        _channel.BasicConsume(RabbitSettings.QueueName, false, consumer);
+        _channel.BasicConsume(
+            queue: RabbitSettings.QueueName,
+            autoAck: false,
+            consumer: consumer
+        );
+
         return Task.CompletedTask;
     }
 
-    private void HandleMessage(string content)
+    private void HandleMessage(string message)
     {
-        Console.WriteLine($"consumer received {content}");
+        Product product = JsonConvert.DeserializeObject<Product>(message);
+        Console.WriteLine($"Consumer received {product}");
     }
 
     private void OnConsumerConsumerCancelled(object sender, ConsumerEventArgs e)

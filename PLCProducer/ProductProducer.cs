@@ -19,21 +19,18 @@ public class ProductProducer : IProductProducer
     {
         ConnectionFactory factory = new ConnectionFactory
         {
-            HostName = RabbitSettings.HostName
+            HostName = RabbitSettings.HostName,
+            Port = RabbitSettings.Port
         };
 
-        // create connection  
         _connection = factory.CreateConnection();
 
-        // create channel
         _channel = _connection.CreateModel();
 
-        // _channel.ExchangeDeclare(RabbitSettings.ExchangeName, type: ExchangeType.Topic);
-
-        // _channel.QueueDeclare(queue: RabbitSettings.QueueName, false, false, false, null);
-
-        // _channel.QueueBind(queue: RabbitSettings.QueueName, exchange: RabbitSettings.ExchangeName,
-        //     routingKey: RabbitSettings.RoutingKey, null);
+        _channel.ExchangeDeclare(
+            exchange: RabbitSettings.ExchangeName,
+            type: ExchangeType.Topic
+        );
 
         _connection.ConnectionShutdown += RabbitMQ_ConnectionShutdown;
     }
@@ -44,12 +41,14 @@ public class ProductProducer : IProductProducer
 
     public void SendProductMessage(Product product)
     {
-        //Serialize the message
         string json = JsonConvert.SerializeObject(product);
         byte[] body = Encoding.UTF8.GetBytes(json);
 
-        //put the data on to the product queue
-        _channel.BasicPublish(exchange: RabbitSettings.ExchangeName,
-            routingKey: RabbitSettings.RoutingKey, body: body, basicProperties: null);
+        _channel.BasicPublish(
+            exchange: RabbitSettings.ExchangeName,
+            routingKey: RabbitSettings.RoutingKey,
+            body: body,
+            basicProperties: null
+        );
     }
 }
