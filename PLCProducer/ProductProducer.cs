@@ -28,9 +28,12 @@ public class ProductProducer : IProductProducer
         // create channel
         _channel = _connection.CreateModel();
 
-        _channel.ExchangeDeclare(RabbitSettings.ExchangeName, ExchangeType.Topic);
-        _channel.QueueDeclare(RabbitSettings.QueueName, false, false, false, null);
-        _channel.QueueBind(RabbitSettings.QueueName, RabbitSettings.ExchangeName, RabbitSettings.RoutingKey, null);
+        // _channel.ExchangeDeclare(RabbitSettings.ExchangeName, type: ExchangeType.Topic);
+
+        // _channel.QueueDeclare(queue: RabbitSettings.QueueName, false, false, false, null);
+
+        // _channel.QueueBind(queue: RabbitSettings.QueueName, exchange: RabbitSettings.ExchangeName,
+        //     routingKey: RabbitSettings.RoutingKey, null);
 
         _connection.ConnectionShutdown += RabbitMQ_ConnectionShutdown;
     }
@@ -46,6 +49,7 @@ public class ProductProducer : IProductProducer
         byte[] body = Encoding.UTF8.GetBytes(json);
 
         //put the data on to the product queue
-        _channel.BasicPublish(exchange: "", routingKey: "product", body: body);
+        _channel.BasicPublish(exchange: RabbitSettings.ExchangeName,
+            routingKey: RabbitSettings.RoutingKey, body: body, basicProperties: null);
     }
 }

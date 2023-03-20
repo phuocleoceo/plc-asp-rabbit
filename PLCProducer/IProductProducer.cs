@@ -1,3 +1,5 @@
+using PLCLib;
+
 namespace PLCProducer;
 
 public interface IProductProducer
