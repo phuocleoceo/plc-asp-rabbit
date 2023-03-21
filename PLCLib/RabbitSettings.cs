@@ -2,6 +2,8 @@
 
 public static class RabbitSettings
 {
+    public const bool RabbitEnable = true;
+
     public const string HostName = "localhost";
 
     public const int Port = 5672;

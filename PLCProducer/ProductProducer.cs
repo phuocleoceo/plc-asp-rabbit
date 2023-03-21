@@ -5,7 +5,7 @@ using PLCLib;
 
 namespace PLCProducer;
 
-public class ProductProducer : IProductProducer
+public class ProductProducer : IProductProducer, IDisposable
 {
     private IConnection _connection;
     private IModel _channel;
@@ -50,5 +50,11 @@ public class ProductProducer : IProductProducer
             body: body,
             basicProperties: null
         );
+    }
+
+    public void Dispose()
+    {
+        _connection.Close();
+        _channel.Close();
     }
 }
