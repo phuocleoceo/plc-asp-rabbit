@@ -27,11 +27,6 @@ public class ProductProducer : IProductProducer, IDisposable
 
         _channel = _connection.CreateModel();
 
-        _channel.ExchangeDeclare(
-            exchange: RabbitSettings.ExchangeName,
-            type: ExchangeType.Topic
-        );
-
         _connection.ConnectionShutdown += RabbitMQ_ConnectionShutdown;
     }
 
@@ -46,7 +41,7 @@ public class ProductProducer : IProductProducer, IDisposable
 
         _channel.BasicPublish(
             exchange: RabbitSettings.ExchangeName,
-            routingKey: RabbitSettings.RoutingKey,
+            routingKey: RabbitSettings.ProducerRoutingKey,
             body: body,
             basicProperties: null
         );

@@ -41,12 +41,15 @@ public class ProductConsumer : BackgroundService
             arguments: null
         );
 
-        _channel.QueueBind(
-            queue: RabbitSettings.QueueName,
-            exchange: RabbitSettings.ExchangeName,
-            routingKey: RabbitSettings.RoutingKey,
-            arguments: null
-        );
+        foreach (string routingKey in RabbitSettings.ConsumerRoutingKey)
+        {
+            _channel.QueueBind(
+                queue: RabbitSettings.QueueName,
+                exchange: RabbitSettings.ExchangeName,
+                routingKey: routingKey,
+                arguments: null
+            );
+        }
 
         _channel.BasicQos(
             prefetchSize: 0,
@@ -64,8 +67,9 @@ public class ProductConsumer : BackgroundService
         EventingBasicConsumer consumer = new EventingBasicConsumer(_channel);
         consumer.Received += (_, ea) =>
         {
-            string message = Encoding.UTF8.GetString(ea.Body.ToArray());
+            Console.Write($"Consume key {ea.RoutingKey} : ");
 
+            string message = Encoding.UTF8.GetString(ea.Body.ToArray());
             HandleMessage(message);
 
             _channel.BasicAck(
@@ -91,7 +95,7 @@ public class ProductConsumer : BackgroundService
     private void HandleMessage(string message)
     {
         Product product = JsonConvert.DeserializeObject<Product>(message);
-        Console.WriteLine($"Consumer received {product}");
+        Console.WriteLine(product);
     }
 
     private void OnConsumerConsumerCancelled(object sender, ConsumerEventArgs e)
