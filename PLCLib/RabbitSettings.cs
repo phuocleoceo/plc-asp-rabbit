@@ -5,7 +5,7 @@ public static class RabbitSettings
     // General info
     public const bool RabbitEnable = true;
 
-    public const string HostName = "13.251.143.65";
+    public const string HostName = "localhost";
 
     public const int Port = 5672;
 

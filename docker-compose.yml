@@ -1,0 +1,16 @@
+version: "3.9"
+
+services:
+  plc-rabbit:
+    image: rabbitmq:3-management
+    container_name: plc-rabbitmq
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    volumes:
+      - rabbit-data:/var/lib/rabbitmq/
+      - rabbit-log:/var/log/rabbitmq
+
+volumes:
+  rabbit-data:
+  rabbit-log:
