@@ -65,23 +65,11 @@ public class ProductConsumer : BackgroundService
         cancellationToken.ThrowIfCancellationRequested();
 
         EventingBasicConsumer consumer = new EventingBasicConsumer(_channel);
-        consumer.Received += (_, ea) =>
-        {
-            Console.Write($"Consume key {ea.RoutingKey} : ");
-
-            string message = Encoding.UTF8.GetString(ea.Body.ToArray());
-            HandleMessage(message);
-
-            _channel.BasicAck(
-                deliveryTag: ea.DeliveryTag,
-                multiple: false
-            );
-        };
-
+        consumer.Received += OnConsumerReceived;
         consumer.Shutdown += OnConsumerShutdown;
         consumer.Registered += OnConsumerRegistered;
         consumer.Unregistered += OnConsumerUnregistered;
-        consumer.ConsumerCancelled += OnConsumerConsumerCancelled;
+        consumer.ConsumerCancelled += OnConsumerCancelled;
 
         _channel.BasicConsume(
             queue: RabbitSettings.QueueName,
@@ -98,7 +86,20 @@ public class ProductConsumer : BackgroundService
         Console.WriteLine(product);
     }
 
-    private void OnConsumerConsumerCancelled(object sender, ConsumerEventArgs e)
+    private void OnConsumerReceived(object sender, BasicDeliverEventArgs e)
+    {
+        Console.Write($"Consume key {e.RoutingKey} : ");
+
+        string message = Encoding.UTF8.GetString(e.Body.ToArray());
+        HandleMessage(message);
+
+        _channel.BasicAck(
+            deliveryTag: e.DeliveryTag,
+            multiple: false
+        );
+    }
+
+    private void OnConsumerCancelled(object sender, ConsumerEventArgs e)
     {
     }
 
