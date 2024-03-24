@@ -1,14 +1,6 @@
-using PLCConsumer;
-using PLCLib;
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
-if (RabbitSettings.RabbitEnable)
-{
-    builder.Services.AddHostedService<ProductConsumer>();
-}
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
