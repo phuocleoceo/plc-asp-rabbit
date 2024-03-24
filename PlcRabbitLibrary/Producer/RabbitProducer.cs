@@ -10,17 +10,21 @@ public class RabbitProducer<T> : IRabbitProducer<T>, IDisposable
 {
     private readonly RabbitProducerConfig _rabbitProducerConfig;
     private readonly ILogger<RabbitProducer<T>> _logger;
-    private readonly IConnection _connection;
-    private readonly IModel _channel;
+    private IConnection _connection;
+    private IModel _channel;
 
     public RabbitProducer(
-        ILogger<RabbitProducer<T>> logger,
-        IOptions<RabbitProducerConfig> rabbitProducerConfig
+        IOptions<RabbitProducerConfig> rabbitProducerConfig,
+        ILogger<RabbitProducer<T>> logger
     )
     {
-        _logger = logger;
         _rabbitProducerConfig = rabbitProducerConfig.Value;
+        _logger = logger;
+        InitRabbitProducer();
+    }
 
+    private void InitRabbitProducer()
+    {
         ConnectionFactory factory = new ConnectionFactory
         {
             HostName = _rabbitProducerConfig.HostName,
@@ -36,13 +40,7 @@ public class RabbitProducer<T> : IRabbitProducer<T>, IDisposable
 
     private void RabbitMQ_ConnectionShutdown(object sender, ShutdownEventArgs e)
     {
-        _logger.LogInformation("RabbitMQ Shutdown");
-    }
-
-    public void Dispose()
-    {
-        _connection.Close();
-        _channel.Close();
+        _logger.LogInformation("RabbitMQ Producer Connection Shutdown");
     }
 
     public async Task ProduceAsync(string exchange, string routingKey, T data)
@@ -55,5 +53,11 @@ public class RabbitProducer<T> : IRabbitProducer<T>, IDisposable
         );
 
         await Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        _connection.Close();
+        _channel.Close();
     }
 }
