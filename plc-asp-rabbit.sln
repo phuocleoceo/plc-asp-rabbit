@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlcRabbitLibrary", "PlcRabbitLibrary\PlcRabbitLibrary.csproj", "{F9E3035B-D7ED-4F29-9D16-2D08E34ED513}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlcRabbitProducer", "PlcRabbitProducer\PlcRabbitProducer.csproj", "{5E385667-823C-492E-BBFA-23FC482E25E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlcRabbitConsumer", "PlcRabbitConsumer\PlcRabbitConsumer.csproj", "{50EA1C8C-0CE6-418F-A577-0E167BB51460}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F9E3035B-D7ED-4F29-9D16-2D08E34ED513}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9E3035B-D7ED-4F29-9D16-2D08E34ED513}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9E3035B-D7ED-4F29-9D16-2D08E34ED513}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9E3035B-D7ED-4F29-9D16-2D08E34ED513}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E385667-823C-492E-BBFA-23FC482E25E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E385667-823C-492E-BBFA-23FC482E25E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E385667-823C-492E-BBFA-23FC482E25E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E385667-823C-492E-BBFA-23FC482E25E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{50EA1C8C-0CE6-418F-A577-0E167BB51460}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{50EA1C8C-0CE6-418F-A577-0E167BB51460}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{50EA1C8C-0CE6-418F-A577-0E167BB51460}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{50EA1C8C-0CE6-418F-A577-0E167BB51460}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

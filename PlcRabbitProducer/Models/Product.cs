@@ -1,4 +1,4 @@
-namespace PLCLib;
+namespace PlcRabbitProducer.Models;
 
 public class Product
 {

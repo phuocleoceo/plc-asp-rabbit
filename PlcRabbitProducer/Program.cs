@@ -1,19 +1,22 @@
-using PLCProducer;
-using PLCLib;
+using PlcRabbitLibrary;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-if (RabbitSettings.RabbitEnable)
-{
-    builder.Services.AddScoped<IProductProducer, ProductProducer>();
-}
-
 builder.Services.AddControllers();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder
+    .Services
+    .AddRabbitProducer(c =>
+    {
+        c.HostName = "localhost";
+        c.Port = 5672;
+    });
 
 var app = builder.Build();
 
