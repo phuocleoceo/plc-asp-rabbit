@@ -9,10 +9,15 @@ namespace PlcRabbitProducer.Controllers;
 public class ProducerController : ControllerBase
 {
     private readonly IRabbitProducer<Product> _productProducer;
+    private readonly IRabbitProducer<User> _userProducer;
 
-    public ProducerController(IRabbitProducer<Product> productProducer)
+    public ProducerController(
+        IRabbitProducer<Product> productProducer,
+        IRabbitProducer<User> userProducer
+    )
     {
         _productProducer = productProducer;
+        _userProducer = userProducer;
     }
 
     [HttpPost("Send-Product")]
@@ -24,5 +29,16 @@ public class ProducerController : ControllerBase
 
         await _productProducer.ProduceAsync(exchangeName, routingKey, product);
         return Ok(product);
+    }
+
+    [HttpPost("Send-User")]
+    public async Task<IActionResult> SendUser()
+    {
+        User user = new User() { Name = "Trương Minh Phước", Gender = true };
+        const string exchangeName = "plc.exchange";
+        const string routingKey = "plc.key.user";
+
+        await _userProducer.ProduceAsync(exchangeName, routingKey, user);
+        return Ok(user);
     }
 }

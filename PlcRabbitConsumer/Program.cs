@@ -23,6 +23,17 @@ builder
         c.RoutingKeys = new[] { "plc.key.*", "plc2.key.*" };
     });
 
+builder
+    .Services
+    .AddRabbitConsumer<User, UserHandler>(c =>
+    {
+        c.HostName = "localhost";
+        c.Port = 5672;
+        c.ExchangeName = "plc.exchange";
+        c.QueueName = "plc.queue.user";
+        c.RoutingKeys = new[] { "plc.key.*", "plc2.key.*" };
+    });
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

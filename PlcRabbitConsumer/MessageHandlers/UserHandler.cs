@@ -3,11 +3,11 @@ using PlcRabbitLibrary.Consumer;
 
 namespace PlcRabbitConsumer.MessageHandlers;
 
-public class ProductHandler : IRabbitConsumerHandler<Product>
+public class UserHandler : IRabbitConsumerHandler<User>
 {
-    public Task HandleAsync(Product product)
+    public Task HandleAsync(User user)
     {
-        Console.WriteLine("Product: " + product);
+        Console.WriteLine("User: " + user);
         return Task.CompletedTask;
     }
 }
