@@ -47,6 +47,14 @@ public class RabbitConsumer<T> : IHostedService, IDisposable
             type: ExchangeType.Topic
         );
 
+        _channel.QueueDeclare(
+            queue: _rabbitConsumerConfig.QueueName,
+            durable: false,
+            exclusive: false,
+            autoDelete: false,
+            arguments: null
+        );
+
         foreach (string routingKey in _rabbitConsumerConfig.RoutingKeys)
         {
             _channel.QueueBind(

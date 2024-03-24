@@ -1,6 +1,4 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using PlcRabbitLibrary;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +9,14 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder
+    .Services
+    .AddRabbitProducer(c =>
+    {
+        c.HostName = "localhost";
+        c.Port = 5672;
+    });
 
 var app = builder.Build();
 
