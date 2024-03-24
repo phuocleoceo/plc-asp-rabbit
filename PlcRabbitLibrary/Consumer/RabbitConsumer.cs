@@ -3,71 +3,33 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PlcRabbitLibrary.Configuration;
+using PlcRabbitLibrary.Connection;
 using PlcRabbitLibrary.Data;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
 namespace PlcRabbitLibrary.Consumer;
 
-public class RabbitConsumer<T> : IHostedService, IDisposable
+public class RabbitConsumer<T> : IHostedService
 {
-    private readonly RabbitConsumerConfig _rabbitConsumerConfig;
     private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly RabbitConsumerConfig _rabbitConsumerConfig;
+    private readonly RabbitConnection _rabbitConnection;
     private readonly ILogger<RabbitConsumer<T>> _logger;
+
     private IRabbitConsumerHandler<T> _rabbitConsumerHandler;
-    private IConnection _connection;
-    private IModel _channel;
 
     public RabbitConsumer(
         IOptions<RabbitConsumerConfig> rabbitConsumerConfig,
         IServiceScopeFactory serviceScopeFactory,
+        RabbitConnection rabbitConnection,
         ILogger<RabbitConsumer<T>> logger
     )
     {
         _rabbitConsumerConfig = rabbitConsumerConfig.Value;
         _serviceScopeFactory = serviceScopeFactory;
+        _rabbitConnection = rabbitConnection;
         _logger = logger;
-        InitRabbitConsumer();
-    }
-
-    private void InitRabbitConsumer()
-    {
-        ConnectionFactory factory = new ConnectionFactory
-        {
-            HostName = _rabbitConsumerConfig.HostName,
-            Port = _rabbitConsumerConfig.Port
-        };
-
-        _connection = factory.CreateConnection();
-
-        _channel = _connection.CreateModel();
-
-        _channel.ExchangeDeclare(
-            exchange: _rabbitConsumerConfig.ExchangeName,
-            type: ExchangeType.Topic
-        );
-
-        _channel.QueueDeclare(
-            queue: _rabbitConsumerConfig.QueueName,
-            durable: false,
-            exclusive: false,
-            autoDelete: false,
-            arguments: null
-        );
-
-        foreach (string routingKey in _rabbitConsumerConfig.RoutingKeys)
-        {
-            _channel.QueueBind(
-                queue: _rabbitConsumerConfig.QueueName,
-                exchange: _rabbitConsumerConfig.ExchangeName,
-                routingKey: routingKey,
-                arguments: null
-            );
-        }
-
-        _channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
-
-        _connection.ConnectionShutdown += RabbitMQ_ConnectionShutdown;
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -77,18 +39,23 @@ public class RabbitConsumer<T> : IHostedService, IDisposable
         Task.Run(
             () =>
             {
-                EventingBasicConsumer consumer = new EventingBasicConsumer(_channel);
+                EventingBasicConsumer consumer = new EventingBasicConsumer(
+                    _rabbitConnection.Channel
+                );
+
                 consumer.Received += OnConsumerReceived;
                 consumer.Shutdown += OnConsumerShutdown;
                 consumer.Registered += OnConsumerRegistered;
                 consumer.Unregistered += OnConsumerUnregistered;
                 consumer.ConsumerCancelled += OnConsumerCancelled;
 
-                _channel.BasicConsume(
-                    queue: _rabbitConsumerConfig.QueueName,
-                    autoAck: false,
-                    consumer: consumer
-                );
+                _rabbitConnection
+                    .Channel
+                    .BasicConsume(
+                        queue: _rabbitConsumerConfig.QueueName,
+                        autoAck: false,
+                        consumer: consumer
+                    );
             },
             cancellationToken
         );
@@ -113,7 +80,7 @@ public class RabbitConsumer<T> : IHostedService, IDisposable
 
         _rabbitConsumerHandler.HandleAsync(RabbitDeserializer<T>.Deserialize(e.Body.ToArray()));
 
-        _channel.BasicAck(deliveryTag: e.DeliveryTag, multiple: false);
+        _rabbitConnection.Channel.BasicAck(deliveryTag: e.DeliveryTag, multiple: false);
     }
 
     private void OnConsumerCancelled(object sender, ConsumerEventArgs e)
@@ -139,11 +106,5 @@ public class RabbitConsumer<T> : IHostedService, IDisposable
     private void RabbitMQ_ConnectionShutdown(object sender, ShutdownEventArgs e)
     {
         _logger.LogInformation("RabbitMQ Consumer Connection Shutdown");
-    }
-
-    public void Dispose()
-    {
-        _channel.Close();
-        _connection.Close();
     }
 }
