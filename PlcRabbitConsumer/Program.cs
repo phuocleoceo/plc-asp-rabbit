@@ -19,11 +19,17 @@ builder
     {
         c.HostName = "localhost";
         c.Port = 5672;
-        c.ExchangeName = "plc.exchange";
-        c.BindConfigs = new List<RabbitBindingConfig>
+        c.ExchangeConfigs = new List<RabbitExchangeConfig>()
         {
-            new("plc.queue.product", "plc.key.*", "plc2.key.*"),
-            new("plc.queue.user", "plc.key.*", "plc2.key.*")
+            new()
+            {
+                ExchangeName = "plc.exchange",
+                QueueConfigs = new List<RabbitQueueConfig>
+                {
+                    new("plc.queue.product", "plc.key.product.*", "plc2.key.product.*"),
+                    new("plc.queue.user", "plc.key.user.*", "plc2.key.user.*")
+                }
+            }
         };
     });
 

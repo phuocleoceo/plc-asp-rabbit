@@ -26,7 +26,7 @@ public class RabbitConnection : IDisposable
 
     private void InitRabbit()
     {
-        ConnectionFactory factory = new ConnectionFactory
+        ConnectionFactory factory = new()
         {
             HostName = _rabbitMQConfig.HostName,
             Port = _rabbitMQConfig.Port
@@ -36,26 +36,29 @@ public class RabbitConnection : IDisposable
 
         _channel = _connection.CreateModel();
 
-        _channel.ExchangeDeclare(exchange: _rabbitMQConfig.ExchangeName, type: ExchangeType.Topic);
-
-        foreach (RabbitBindingConfig bindingConfig in _rabbitMQConfig.BindConfigs)
+        foreach (RabbitExchangeConfig exchangeConfig in _rabbitMQConfig.ExchangeConfigs)
         {
-            _channel.QueueDeclare(
-                queue: bindingConfig.QueueName,
-                durable: false,
-                exclusive: false,
-                autoDelete: false,
-                arguments: null
-            );
+            _channel.ExchangeDeclare(exchange: exchangeConfig.ExchangeName, type: ExchangeType.Topic);
 
-            foreach (string routingKey in bindingConfig.RoutingKeys)
+            foreach (RabbitQueueConfig queueConfig in exchangeConfig.QueueConfigs)
             {
-                _channel.QueueBind(
-                    queue: bindingConfig.QueueName,
-                    exchange: _rabbitMQConfig.ExchangeName,
-                    routingKey: routingKey,
+                _channel.QueueDeclare(
+                    queue: queueConfig.QueueName,
+                    durable: false,
+                    exclusive: false,
+                    autoDelete: false,
                     arguments: null
                 );
+
+                foreach (string routingKey in queueConfig.RoutingKeys)
+                {
+                    _channel.QueueBind(
+                        queue: queueConfig.QueueName,
+                        exchange: exchangeConfig.ExchangeName,
+                        routingKey: routingKey,
+                        arguments: null
+                    );
+                }
             }
         }
 

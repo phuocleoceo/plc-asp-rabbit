@@ -25,7 +25,7 @@ public class ProducerController : ControllerBase
     {
         Product product = new Product() { Name = "Tecno Pova 4 Pro", Price = 4500000 };
         const string exchangeName = "plc.exchange";
-        const string routingKey = "plc.key.product";
+        const string routingKey = "plc.key.product.v1";
 
         await _productProducer.ProduceAsync(exchangeName, routingKey, product);
         return Ok(product);
@@ -36,7 +36,7 @@ public class ProducerController : ControllerBase
     {
         User user = new User() { Name = "Trương Minh Phước", Gender = true };
         const string exchangeName = "plc.exchange";
-        const string routingKey = "plc.key.user";
+        const string routingKey = "plc.key.user.v1";
 
         await _userProducer.ProduceAsync(exchangeName, routingKey, user);
         return Ok(user);
