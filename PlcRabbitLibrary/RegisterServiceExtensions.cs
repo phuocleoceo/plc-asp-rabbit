@@ -1,8 +1,9 @@
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PlcRabbitLibrary.Configuration;
-using PlcRabbitLibrary.Connection;
 using PlcRabbitLibrary.Consumer;
+using PlcRabbitLibrary.Extensions;
 using PlcRabbitLibrary.Producer;
 
 namespace PlcRabbitLibrary;
@@ -11,11 +12,11 @@ public static class RegisterServiceExtensions
 {
     public static IServiceCollection AddRabbitConnection(
         this IServiceCollection services,
-        Action<RabbitMQConfig> configAction
+        IConfiguration configuration
     )
     {
-        services.Configure(configAction);
-        services.AddSingleton(typeof(RabbitConnection));
+        RabbitMQConfig rabbitMqConfig = configuration.GetSection("RabbitMQ").Get<RabbitMQConfig>();
+        services.ConfigureRabbitConnection(rabbitMqConfig);
         return services;
     }
 
