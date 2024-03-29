@@ -23,9 +23,7 @@ public static class RegisterRabbitExtension
                     // UserName = rabbitMqConfig.UserName,
                     // Password = rabbitMqConfig.Password
                 };
-
             IConnection connection = factory.CreateConnection();
-
             IModel channel = connection.CreateModel();
 
             foreach (RabbitExchangeConfig exchangeConfig in rabbitMqConfig.ExchangeConfigs)
@@ -57,9 +55,15 @@ public static class RegisterRabbitExtension
                 }
             }
 
-            channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
-            connection.ConnectionShutdown += RabbitMQ_ConnectionShutdown;
+            RabbitQosConfig rabbitQosConfig = rabbitMqConfig.Qos;
 
+            channel.BasicQos(
+                prefetchSize: rabbitQosConfig.PrefetchSize,
+                prefetchCount: rabbitQosConfig.PrefetchCount,
+                global: rabbitQosConfig.Global
+            );
+
+            connection.ConnectionShutdown += RabbitMQ_ConnectionShutdown;
             return channel;
         });
 
