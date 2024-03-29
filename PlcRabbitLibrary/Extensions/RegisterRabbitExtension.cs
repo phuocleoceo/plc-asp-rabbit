@@ -39,19 +39,19 @@ public static class RegisterRabbitExtension
                 {
                     channel.QueueDeclare(
                         queue: queueConfig.QueueName,
-                        durable: false,
-                        exclusive: false,
-                        autoDelete: false,
-                        arguments: null
+                        durable: queueConfig.Durable,
+                        exclusive: queueConfig.Exclusive,
+                        autoDelete: queueConfig.AutoDelete,
+                        arguments: queueConfig.Arguments
                     );
 
-                    foreach (string routingKey in queueConfig.RoutingKeys)
+                    foreach (RabbitRoutingKeyConfig routingKeyConfig in queueConfig.RoutingKeys)
                     {
                         channel.QueueBind(
                             queue: queueConfig.QueueName,
                             exchange: exchangeConfig.ExchangeName,
-                            routingKey: routingKey,
-                            arguments: null
+                            routingKey: routingKeyConfig.KeyName,
+                            arguments: routingKeyConfig.Arguments
                         );
                     }
                 }
