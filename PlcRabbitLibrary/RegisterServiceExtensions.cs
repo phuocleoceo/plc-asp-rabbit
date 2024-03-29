@@ -10,12 +10,16 @@ namespace PlcRabbitLibrary;
 
 public static class RegisterServiceExtensions
 {
+    private const string ConfigurationKey = "RabbitMQ";
+
     public static IServiceCollection AddRabbitConnection(
         this IServiceCollection services,
         IConfiguration configuration
     )
     {
-        RabbitMQConfig rabbitMqConfig = configuration.GetSection("RabbitMQ").Get<RabbitMQConfig>();
+        RabbitMQConfig rabbitMqConfig = configuration
+            .GetSection(ConfigurationKey)
+            .Get<RabbitMQConfig>();
         services.ConfigureRabbitConnection(rabbitMqConfig);
         return services;
     }
@@ -27,12 +31,10 @@ public static class RegisterServiceExtensions
     }
 
     public static IServiceCollection AddRabbitConsumer<TValue, THandler>(
-        this IServiceCollection services,
-        Action<RabbitConsumerConfig> configAction
+        this IServiceCollection services
     )
         where THandler : class, IRabbitConsumerHandler<TValue>
     {
-        services.Configure(configAction);
         services.AddScoped<IRabbitConsumerHandler<TValue>, THandler>();
         services.AddSingleton<IHostedService, RabbitConsumer<TValue>>();
         return services;

@@ -15,19 +15,8 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddRabbitConnection(builder.Configuration);
 
-builder
-    .Services
-    .AddRabbitConsumer<Product, ProductHandler>(c =>
-    {
-        c.QueueName = "plc.queue.product";
-    });
-
-builder
-    .Services
-    .AddRabbitConsumer<User, UserHandler>(c =>
-    {
-        c.QueueName = "plc.queue.user";
-    });
+builder.Services.AddRabbitConsumer<Product, ProductHandler>();
+builder.Services.AddRabbitConsumer<User, UserHandler>();
 
 var app = builder.Build();
 

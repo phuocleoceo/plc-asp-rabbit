@@ -38,6 +38,12 @@ public class RabbitConsumer<T> : IHostedService
         Task.Run(
             () =>
             {
+                using IServiceScope scope = _serviceScopeFactory.CreateScope();
+
+                _rabbitConsumerHandler = scope
+                    .ServiceProvider
+                    .GetRequiredService<IRabbitConsumerHandler<T>>();
+
                 EventingBasicConsumer consumer = new EventingBasicConsumer(_channel);
 
                 consumer.Received += OnConsumerReceived;
@@ -47,7 +53,7 @@ public class RabbitConsumer<T> : IHostedService
                 consumer.ConsumerCancelled += OnConsumerCancelled;
 
                 _channel.BasicConsume(
-                    queue: _rabbitConsumerConfig.QueueName,
+                    queue: _rabbitConsumerHandler.QueueName,
                     autoAck: false,
                     consumer: consumer
                 );
@@ -67,14 +73,7 @@ public class RabbitConsumer<T> : IHostedService
     {
         _logger.LogInformation($"RabbitMQ Consumer Key: {e.RoutingKey}");
 
-        using IServiceScope scope = _serviceScopeFactory.CreateScope();
-
-        _rabbitConsumerHandler = scope
-            .ServiceProvider
-            .GetRequiredService<IRabbitConsumerHandler<T>>();
-
         _rabbitConsumerHandler.HandleAsync(RabbitDeserializer<T>.Deserialize(e.Body.ToArray()));
-
         _channel.BasicAck(deliveryTag: e.DeliveryTag, multiple: false);
     }
 
@@ -96,10 +95,5 @@ public class RabbitConsumer<T> : IHostedService
     private void OnConsumerShutdown(object sender, ShutdownEventArgs e)
     {
         _logger.LogInformation("RabbitMQ Consumer Shutdown");
-    }
-
-    private void RabbitMQ_ConnectionShutdown(object sender, ShutdownEventArgs e)
-    {
-        _logger.LogInformation("RabbitMQ Consumer Connection Shutdown");
     }
 }
