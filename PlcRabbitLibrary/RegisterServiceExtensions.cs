@@ -17,10 +17,8 @@ public static class RegisterServiceExtensions
         IConfiguration configuration
     )
     {
-        RabbitMQConfig rabbitMqConfig = configuration
-            .GetSection(ConfigurationKey)
-            .Get<RabbitMQConfig>();
-        services.ConfigureRabbitConnection(rabbitMqConfig);
+        services.Configure<RabbitMQConfig>(configuration.GetSection(ConfigurationKey));
+        services.ConfigureRabbitConnection();
         return services;
     }
 

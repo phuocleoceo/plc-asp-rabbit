@@ -11,21 +11,22 @@ namespace PlcRabbitLibrary.Consumer;
 
 public class RabbitConsumer<T> : IHostedService
 {
-    private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly RabbitConsumerConfig _rabbitConsumerConfig;
+
+    private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ILogger<RabbitConsumer<T>> _logger;
     private readonly IModel _channel;
 
     private IRabbitConsumerHandler<T> _rabbitConsumerHandler;
 
     public RabbitConsumer(
-        IOptions<RabbitConsumerConfig> rabbitConsumerConfig,
         IServiceScopeFactory serviceScopeFactory,
+        IOptions<RabbitMQConfig> rabbitMqConfig,
         ILogger<RabbitConsumer<T>> logger,
         IModel channel
     )
     {
-        _rabbitConsumerConfig = rabbitConsumerConfig.Value;
+        _rabbitConsumerConfig = rabbitMqConfig.Value.Consumer;
         _serviceScopeFactory = serviceScopeFactory;
         _channel = channel;
         _logger = logger;
@@ -54,7 +55,7 @@ public class RabbitConsumer<T> : IHostedService
 
                 _channel.BasicConsume(
                     queue: _rabbitConsumerHandler.QueueName,
-                    autoAck: false,
+                    autoAck: _rabbitConsumerConfig.AutoAck,
                     consumer: consumer
                 );
             },
@@ -71,10 +72,8 @@ public class RabbitConsumer<T> : IHostedService
 
     private void OnConsumerReceived(object sender, BasicDeliverEventArgs e)
     {
-        _logger.LogInformation($"RabbitMQ Consumer Key: {e.RoutingKey}");
-
         _rabbitConsumerHandler.HandleAsync(RabbitDeserializer<T>.Deserialize(e.Body.ToArray()));
-        _channel.BasicAck(deliveryTag: e.DeliveryTag, multiple: false);
+        _channel.BasicAck(deliveryTag: e.DeliveryTag, multiple: _rabbitConsumerConfig.AckMultiple);
     }
 
     private void OnConsumerCancelled(object sender, ConsumerEventArgs e)
