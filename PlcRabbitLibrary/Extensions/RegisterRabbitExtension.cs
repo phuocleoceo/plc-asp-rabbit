@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using PlcRabbitLibrary.Configuration;
 using RabbitMQ.Client;
 
@@ -6,53 +7,66 @@ namespace PlcRabbitLibrary.Extensions;
 
 public static class RegisterRabbitExtension
 {
-    public static IServiceCollection ConfigureRabbitConnection(
-        this IServiceCollection services,
-        RabbitMQConfig rabbitMqConfig
-    )
+    public static IServiceCollection ConfigureRabbitConnection(this IServiceCollection services)
     {
-        ConnectionFactory factory =
-            new() { HostName = rabbitMqConfig.HostName, Port = rabbitMqConfig.Port };
-
-        IConnection connection = factory.CreateConnection();
-
-        IModel channel = connection.CreateModel();
-
-        foreach (RabbitExchangeConfig exchangeConfig in rabbitMqConfig.ExchangeConfigs)
+        services.AddSingleton(serviceProvider =>
         {
-            channel.ExchangeDeclare(
-                exchange: exchangeConfig.ExchangeName,
-                type: ExchangeType.Topic
-            );
+            RabbitMQConfig rabbitMqConfig = serviceProvider
+                .GetRequiredService<IOptions<RabbitMQConfig>>()
+                .Value;
 
-            foreach (RabbitQueueConfig queueConfig in exchangeConfig.QueueConfigs)
+            ConnectionFactory factory =
+                new()
+                {
+                    HostName = rabbitMqConfig.HostName,
+                    Port = rabbitMqConfig.Port,
+                    // UserName = rabbitMqConfig.UserName,
+                    // Password = rabbitMqConfig.Password
+                };
+            IConnection connection = factory.CreateConnection();
+            IModel channel = connection.CreateModel();
+
+            foreach (RabbitExchangeConfig exchangeConfig in rabbitMqConfig.ExchangeConfigs)
             {
-                channel.QueueDeclare(
-                    queue: queueConfig.QueueName,
-                    durable: false,
-                    exclusive: false,
-                    autoDelete: false,
-                    arguments: null
+                channel.ExchangeDeclare(
+                    exchange: exchangeConfig.ExchangeName,
+                    type: ExchangeType.Topic
                 );
 
-                foreach (string routingKey in queueConfig.RoutingKeys)
+                foreach (RabbitQueueConfig queueConfig in exchangeConfig.QueueConfigs)
                 {
-                    channel.QueueBind(
+                    channel.QueueDeclare(
                         queue: queueConfig.QueueName,
-                        exchange: exchangeConfig.ExchangeName,
-                        routingKey: routingKey,
-                        arguments: null
+                        durable: queueConfig.Durable,
+                        exclusive: queueConfig.Exclusive,
+                        autoDelete: queueConfig.AutoDelete,
+                        arguments: queueConfig.Arguments
                     );
+
+                    foreach (RabbitRoutingKeyConfig routingKeyConfig in queueConfig.RoutingKeys)
+                    {
+                        channel.QueueBind(
+                            queue: queueConfig.QueueName,
+                            exchange: exchangeConfig.ExchangeName,
+                            routingKey: routingKeyConfig.KeyName,
+                            arguments: routingKeyConfig.Arguments
+                        );
+                    }
                 }
             }
-        }
 
-        channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+            RabbitQosConfig rabbitQosConfig = rabbitMqConfig.Qos;
 
-        connection.ConnectionShutdown += RabbitMQ_ConnectionShutdown;
+            channel.BasicQos(
+                prefetchSize: rabbitQosConfig.PrefetchSize,
+                prefetchCount: rabbitQosConfig.PrefetchCount,
+                global: rabbitQosConfig.Global
+            );
 
-        services.AddSingleton(connection);
-        services.AddSingleton(channel);
+            connection.ConnectionShutdown += RabbitMQ_ConnectionShutdown;
+            return channel;
+        });
+
         return services;
     }
 
