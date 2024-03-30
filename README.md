@@ -26,11 +26,12 @@ Here's an example of how to use PlcRabbitLibrary to send and receive data betwee
 ```json
 {
   "RabbitMQ": {
-    "HostName": "localhost",
-    "Port": 5672,
-    "VirtualHost": "/",
-    "UserName": "username",
-    "Password": "password",
+    "Connection": {
+      "HostName": "localhost",
+      "Port": 5672,
+      "UserName": "guest",
+      "Password": "guest"
+    },
     "Qos": {
       "PrefetchSize": 0,
       "PrefetchCount": 1,

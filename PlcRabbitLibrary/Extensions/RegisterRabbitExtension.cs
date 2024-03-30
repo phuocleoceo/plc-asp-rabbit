@@ -15,15 +15,7 @@ public static class RegisterRabbitExtension
                 .GetRequiredService<IOptions<RabbitMQConfig>>()
                 .Value;
 
-            ConnectionFactory factory =
-                new()
-                {
-                    HostName = rabbitMqConfig.HostName,
-                    Port = rabbitMqConfig.Port,
-                    UserName = rabbitMqConfig.UserName,
-                    Password = rabbitMqConfig.Password,
-                    VirtualHost = rabbitMqConfig.VirtualHost
-                };
+            ConnectionFactory factory = rabbitMqConfig.Connection;
             IConnection connection = factory.CreateConnection();
             IModel channel = connection.CreateModel();
 
