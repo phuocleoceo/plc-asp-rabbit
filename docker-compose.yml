@@ -1,9 +1,9 @@
 version: "3.9"
 
 services:
-  plc-rabbit:
+  rabbit:
     image: rabbitmq:3-management
-    container_name: plc-rabbitmq
+    container_name: rabbitmq
     ports:
       - "15672:15672"
       - "5672:5672"

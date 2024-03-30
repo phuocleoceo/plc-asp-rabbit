@@ -20,20 +20,20 @@ public static class RegisterRabbitExtension
                 {
                     HostName = rabbitMqConfig.HostName,
                     Port = rabbitMqConfig.Port,
-                    // UserName = rabbitMqConfig.UserName,
-                    // Password = rabbitMqConfig.Password
+                    UserName = rabbitMqConfig.UserName,
+                    Password = rabbitMqConfig.Password
                 };
             IConnection connection = factory.CreateConnection();
             IModel channel = connection.CreateModel();
 
-            foreach (RabbitExchangeConfig exchangeConfig in rabbitMqConfig.ExchangeConfigs)
+            foreach (RabbitExchangeConfig exchangeConfig in rabbitMqConfig.Exchanges)
             {
                 channel.ExchangeDeclare(
                     exchange: exchangeConfig.ExchangeName,
                     type: ExchangeType.Topic
                 );
 
-                foreach (RabbitQueueConfig queueConfig in exchangeConfig.QueueConfigs)
+                foreach (RabbitQueueConfig queueConfig in exchangeConfig.Queues)
                 {
                     channel.QueueDeclare(
                         queue: queueConfig.QueueName,
