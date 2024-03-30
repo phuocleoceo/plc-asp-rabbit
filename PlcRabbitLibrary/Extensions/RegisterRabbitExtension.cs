@@ -21,7 +21,8 @@ public static class RegisterRabbitExtension
                     HostName = rabbitMqConfig.HostName,
                     Port = rabbitMqConfig.Port,
                     UserName = rabbitMqConfig.UserName,
-                    Password = rabbitMqConfig.Password
+                    Password = rabbitMqConfig.Password,
+                    VirtualHost = rabbitMqConfig.VirtualHost
                 };
             IConnection connection = factory.CreateConnection();
             IModel channel = connection.CreateModel();

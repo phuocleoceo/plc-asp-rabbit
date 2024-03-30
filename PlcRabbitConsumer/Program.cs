@@ -1,7 +1,6 @@
 using PlcRabbitConsumer.MessageHandlers;
 using PlcRabbitConsumer.Models;
 using PlcRabbitLibrary;
-using PlcRabbitLibrary.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
