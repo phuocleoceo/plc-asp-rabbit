@@ -13,43 +13,35 @@ public class RabbitConsumer<T>(
     IServiceScopeFactory serviceScopeFactory,
     IOptions<RabbitMQConfig> rabbitMqConfig,
     ILogger<RabbitConsumer<T>> logger,
-    IModel channel
+    IChannel channel
 ) : IHostedService
 {
     private readonly RabbitConsumerConfig _rabbitConsumerConfig = rabbitMqConfig.Value.Consumer;
     private IRabbitConsumerHandler<T> _rabbitConsumerHandler;
 
-    public Task StartAsync(CancellationToken cancellationToken)
+    public async Task StartAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        Task.Run(
-            () =>
-            {
-                using IServiceScope scope = serviceScopeFactory.CreateScope();
+        using IServiceScope scope = serviceScopeFactory.CreateScope();
 
-                _rabbitConsumerHandler = scope.ServiceProvider.GetRequiredService<
-                    IRabbitConsumerHandler<T>
-                >();
+        _rabbitConsumerHandler = scope.ServiceProvider.GetRequiredService<
+            IRabbitConsumerHandler<T>
+        >();
 
-                EventingBasicConsumer consumer = new(channel);
+        var consumer = new AsyncEventingBasicConsumer(channel);
 
-                consumer.Received += OnConsumerReceived;
-                consumer.Shutdown += OnConsumerShutdown;
-                consumer.Registered += OnConsumerRegistered;
-                consumer.Unregistered += OnConsumerUnregistered;
-                consumer.ConsumerCancelled += OnConsumerCancelled;
+        consumer.ReceivedAsync += OnConsumerReceived;
+        consumer.RegisteredAsync += OnConsumerRegistered;
+        consumer.UnregisteredAsync += OnConsumerUnregistered;
+        consumer.ShutdownAsync += OnConsumerShutdown;
 
-                channel.BasicConsume(
-                    queue: _rabbitConsumerHandler.QueueName,
-                    autoAck: _rabbitConsumerConfig.AutoAck,
-                    consumer: consumer
-                );
-            },
-            cancellationToken
+        await channel.BasicConsumeAsync(
+            queue: _rabbitConsumerHandler.QueueName,
+            autoAck: _rabbitConsumerConfig.AutoAck,
+            consumer: consumer,
+            cancellationToken: cancellationToken
         );
-
-        return Task.CompletedTask;
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
@@ -57,29 +49,40 @@ public class RabbitConsumer<T>(
         return Task.CompletedTask;
     }
 
-    private void OnConsumerReceived(object sender, BasicDeliverEventArgs e)
+    private async Task OnConsumerReceived(object sender, BasicDeliverEventArgs e)
     {
-        _rabbitConsumerHandler.HandleAsync(RabbitDeserializer<T>.Deserialize(e.Body.ToArray()));
-        channel.BasicAck(deliveryTag: e.DeliveryTag, multiple: _rabbitConsumerConfig.AckMultiple);
+        try
+        {
+            await _rabbitConsumerHandler.HandleAsync(
+                RabbitDeserializer<T>.Deserialize(e.Body.ToArray())
+            );
+
+            await channel.BasicAckAsync(
+                deliveryTag: e.DeliveryTag,
+                multiple: _rabbitConsumerConfig.AckMultiple
+            );
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error handling RabbitMQ message");
+        }
     }
 
-    private void OnConsumerCancelled(object sender, ConsumerEventArgs e)
-    {
-        logger.LogInformation("RabbitMQ Consumer Cancelled");
-    }
-
-    private void OnConsumerUnregistered(object sender, ConsumerEventArgs e)
+    private Task OnConsumerUnregistered(object sender, ConsumerEventArgs e)
     {
         logger.LogInformation("RabbitMQ Consumer Unregistered");
+        return Task.CompletedTask;
     }
 
-    private void OnConsumerRegistered(object sender, ConsumerEventArgs e)
+    private Task OnConsumerRegistered(object sender, ConsumerEventArgs e)
     {
         logger.LogInformation("RabbitMQ Consumer Registered");
+        return Task.CompletedTask;
     }
 
-    private void OnConsumerShutdown(object sender, ShutdownEventArgs e)
+    private Task OnConsumerShutdown(object sender, ShutdownEventArgs e)
     {
         logger.LogInformation("RabbitMQ Consumer Shutdown");
+        return Task.CompletedTask;
     }
 }

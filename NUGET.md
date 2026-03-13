@@ -4,7 +4,7 @@
 
 ```xml
 <PropertyGroup>
-    <Version>2.0.0</Version>
+    <Version>3.0.0</Version>
 </PropertyGroup>
 ```
 
@@ -23,5 +23,5 @@ dotnet pack PlcRabbitLibrary/PlcRabbitLibrary.csproj -c Release -o ./out/nuget
 ## 4. Push to Nuget Gallery
 
 ```bash
-dotnet nuget push out/nuget/PlcRabbitLibrary.2.0.0.nupkg --api-key <NUGET_API_KEY> --source https://api.nuget.org/v3/index.json
+dotnet nuget push out/nuget/PlcRabbitLibrary.3.0.0.nupkg --api-key <NUGET_API_KEY> --source https://api.nuget.org/v3/index.json
 ```

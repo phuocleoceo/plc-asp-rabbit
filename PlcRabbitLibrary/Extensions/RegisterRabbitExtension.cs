@@ -16,55 +16,61 @@ public static class RegisterRabbitExtension
                 .Value;
 
             ConnectionFactory factory = rabbitMqConfig.Connection;
-            IConnection connection = factory.CreateConnection();
-            IModel channel = connection.CreateModel();
+            IConnection connection = factory.CreateConnectionAsync().GetAwaiter().GetResult();
+            IChannel channel = connection.CreateChannelAsync().GetAwaiter().GetResult();
 
             foreach (RabbitExchangeConfig exchangeConfig in rabbitMqConfig.Exchanges)
             {
-                channel.ExchangeDeclare(
-                    exchange: exchangeConfig.ExchangeName,
-                    type: ExchangeType.Topic
-                );
+                channel
+                    .ExchangeDeclareAsync(
+                        exchange: exchangeConfig.ExchangeName,
+                        type: ExchangeType.Topic
+                    )
+                    .GetAwaiter()
+                    .GetResult();
 
                 foreach (RabbitQueueConfig queueConfig in exchangeConfig.Queues)
                 {
-                    channel.QueueDeclare(
-                        queue: queueConfig.QueueName,
-                        durable: queueConfig.Durable,
-                        exclusive: queueConfig.Exclusive,
-                        autoDelete: queueConfig.AutoDelete,
-                        arguments: queueConfig.Arguments
-                    );
+                    channel
+                        .QueueDeclareAsync(
+                            queue: queueConfig.QueueName,
+                            durable: queueConfig.Durable,
+                            exclusive: queueConfig.Exclusive,
+                            autoDelete: queueConfig.AutoDelete,
+                            arguments: queueConfig.Arguments
+                        )
+                        .GetAwaiter()
+                        .GetResult();
 
                     foreach (RabbitRoutingKeyConfig routingKeyConfig in queueConfig.RoutingKeys)
                     {
-                        channel.QueueBind(
-                            queue: queueConfig.QueueName,
-                            exchange: exchangeConfig.ExchangeName,
-                            routingKey: routingKeyConfig.KeyName,
-                            arguments: routingKeyConfig.Arguments
-                        );
+                        channel
+                            .QueueBindAsync(
+                                queue: queueConfig.QueueName,
+                                exchange: exchangeConfig.ExchangeName,
+                                routingKey: routingKeyConfig.KeyName,
+                                arguments: routingKeyConfig.Arguments
+                            )
+                            .GetAwaiter()
+                            .GetResult();
                     }
                 }
             }
 
             RabbitQosConfig rabbitQosConfig = rabbitMqConfig.Qos;
 
-            channel.BasicQos(
-                prefetchSize: rabbitQosConfig.PrefetchSize,
-                prefetchCount: rabbitQosConfig.PrefetchCount,
-                global: rabbitQosConfig.Global
-            );
+            channel
+                .BasicQosAsync(
+                    prefetchSize: rabbitQosConfig.PrefetchSize,
+                    prefetchCount: rabbitQosConfig.PrefetchCount,
+                    global: rabbitQosConfig.Global
+                )
+                .GetAwaiter()
+                .GetResult();
 
-            connection.ConnectionShutdown += RabbitMQ_ConnectionShutdown;
             return channel;
         });
 
         return services;
-    }
-
-    private static void RabbitMQ_ConnectionShutdown(object sender, ShutdownEventArgs e)
-    {
-        // _logger.LogInformation("RabbitMQ Consumer Connection Shutdown");
     }
 }
