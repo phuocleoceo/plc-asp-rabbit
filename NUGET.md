@@ -8,6 +8,12 @@
 </PropertyGroup>
 ```
 
+## 2. Build the library
+
+```bash
+dotnet build PlcRabbitLibrary/PlcRabbitLibrary.csproj -c Release
+```
+
 ## 2. Pack the library
 
 ```bash
