@@ -99,20 +99,13 @@ builder.Services.AddRabbitProducer();
 ```csharp
 using PlcRabbitLibrary.Producer;
 
-public class YourService : IYourService
+public class YourService(IRabbitProducer<User> userProducer) : IYourService
 {
-    private readonly IRabbitProducer<User> _userProducer;
-
-    public YourService(IRabbitProducer<User> userProducer)
-    {
-        _userProducer = userProducer;
-    }
-
     public async Task SendUserMessage(User user)
     {
         const string exchangeName = "plc.exchange";
         const string routingKey = "plc.key.user.v1";
-        await _userProducer.ProduceAsync(exchangeName, routingKey, user);
+        await userProducer.ProduceAsync(exchangeName, routingKey, user);
     }
 ```
 
