@@ -7,5 +7,5 @@ public class RabbitQueueConfig
     public bool Exclusive { get; set; } = false;
     public bool AutoDelete { get; set; } = false;
     public Dictionary<string, object> Arguments { get; set; } = null;
-    public List<RabbitRoutingKeyConfig> RoutingKeys { get; set; } = new();
+    public List<RabbitRoutingKeyConfig> RoutingKeys { get; set; } = [];
 }

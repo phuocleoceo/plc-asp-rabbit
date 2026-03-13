@@ -41,9 +41,9 @@ public class RabbitConsumer<T> : IHostedService
             {
                 using IServiceScope scope = _serviceScopeFactory.CreateScope();
 
-                _rabbitConsumerHandler = scope
-                    .ServiceProvider
-                    .GetRequiredService<IRabbitConsumerHandler<T>>();
+                _rabbitConsumerHandler = scope.ServiceProvider.GetRequiredService<
+                    IRabbitConsumerHandler<T>
+                >();
 
                 EventingBasicConsumer consumer = new EventingBasicConsumer(_channel);
 
