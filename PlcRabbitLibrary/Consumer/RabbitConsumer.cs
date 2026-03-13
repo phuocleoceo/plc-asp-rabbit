@@ -9,28 +9,15 @@ using RabbitMQ.Client.Events;
 
 namespace PlcRabbitLibrary.Consumer;
 
-public class RabbitConsumer<T> : IHostedService
+public class RabbitConsumer<T>(
+    IServiceScopeFactory serviceScopeFactory,
+    IOptions<RabbitMQConfig> rabbitMqConfig,
+    ILogger<RabbitConsumer<T>> logger,
+    IModel channel
+) : IHostedService
 {
-    private readonly RabbitConsumerConfig _rabbitConsumerConfig;
-
-    private readonly IServiceScopeFactory _serviceScopeFactory;
-    private readonly ILogger<RabbitConsumer<T>> _logger;
-    private readonly IModel _channel;
-
+    private readonly RabbitConsumerConfig _rabbitConsumerConfig = rabbitMqConfig.Value.Consumer;
     private IRabbitConsumerHandler<T> _rabbitConsumerHandler;
-
-    public RabbitConsumer(
-        IServiceScopeFactory serviceScopeFactory,
-        IOptions<RabbitMQConfig> rabbitMqConfig,
-        ILogger<RabbitConsumer<T>> logger,
-        IModel channel
-    )
-    {
-        _rabbitConsumerConfig = rabbitMqConfig.Value.Consumer;
-        _serviceScopeFactory = serviceScopeFactory;
-        _channel = channel;
-        _logger = logger;
-    }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
@@ -39,13 +26,13 @@ public class RabbitConsumer<T> : IHostedService
         Task.Run(
             () =>
             {
-                using IServiceScope scope = _serviceScopeFactory.CreateScope();
+                using IServiceScope scope = serviceScopeFactory.CreateScope();
 
                 _rabbitConsumerHandler = scope.ServiceProvider.GetRequiredService<
                     IRabbitConsumerHandler<T>
                 >();
 
-                EventingBasicConsumer consumer = new EventingBasicConsumer(_channel);
+                EventingBasicConsumer consumer = new(channel);
 
                 consumer.Received += OnConsumerReceived;
                 consumer.Shutdown += OnConsumerShutdown;
@@ -53,7 +40,7 @@ public class RabbitConsumer<T> : IHostedService
                 consumer.Unregistered += OnConsumerUnregistered;
                 consumer.ConsumerCancelled += OnConsumerCancelled;
 
-                _channel.BasicConsume(
+                channel.BasicConsume(
                     queue: _rabbitConsumerHandler.QueueName,
                     autoAck: _rabbitConsumerConfig.AutoAck,
                     consumer: consumer
@@ -73,26 +60,26 @@ public class RabbitConsumer<T> : IHostedService
     private void OnConsumerReceived(object sender, BasicDeliverEventArgs e)
     {
         _rabbitConsumerHandler.HandleAsync(RabbitDeserializer<T>.Deserialize(e.Body.ToArray()));
-        _channel.BasicAck(deliveryTag: e.DeliveryTag, multiple: _rabbitConsumerConfig.AckMultiple);
+        channel.BasicAck(deliveryTag: e.DeliveryTag, multiple: _rabbitConsumerConfig.AckMultiple);
     }
 
     private void OnConsumerCancelled(object sender, ConsumerEventArgs e)
     {
-        _logger.LogInformation("RabbitMQ Consumer Cancelled");
+        logger.LogInformation("RabbitMQ Consumer Cancelled");
     }
 
     private void OnConsumerUnregistered(object sender, ConsumerEventArgs e)
     {
-        _logger.LogInformation("RabbitMQ Consumer Unregistered");
+        logger.LogInformation("RabbitMQ Consumer Unregistered");
     }
 
     private void OnConsumerRegistered(object sender, ConsumerEventArgs e)
     {
-        _logger.LogInformation("RabbitMQ Consumer Registered");
+        logger.LogInformation("RabbitMQ Consumer Registered");
     }
 
     private void OnConsumerShutdown(object sender, ShutdownEventArgs e)
     {
-        _logger.LogInformation("RabbitMQ Consumer Shutdown");
+        logger.LogInformation("RabbitMQ Consumer Shutdown");
     }
 }
