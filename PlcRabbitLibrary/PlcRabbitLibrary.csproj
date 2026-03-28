@@ -7,7 +7,7 @@
     <Authors>phuocleoceo</Authors>
     <Copyright>phuocleoceo</Copyright>
     <PackageIcon>PLC-RabbitMQ.png</PackageIcon>
-    <Version>3.0.0</Version>
+    <Version>3.1.0</Version>
     <Description>A AutoConfigure RabbitMQ library for ASP.NET applications</Description>
     <PackageProjectUrl>https://github.com/phuocleoceo/plc-asp-rabbit</PackageProjectUrl>
     <RepositoryUrl>https://github.com/phuocleoceo/plc-asp-rabbit</RepositoryUrl>
@@ -17,7 +17,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.5" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.5" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="RabbitMQ.Client" Version="7.2.1" />
   </ItemGroup>
 

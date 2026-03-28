@@ -1,5 +1,5 @@
 using System.Text;
-using Newtonsoft.Json;
+using PlcRabbitLibrary.Utils;
 
 namespace PlcRabbitLibrary.Data;
 
@@ -7,6 +7,6 @@ public static class RabbitDeserializer<T>
 {
     public static T Deserialize(byte[] data)
     {
-        return JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(data));
+        return JsonUtils.Deserialize<T>(Encoding.UTF8.GetString(data));
     }
 }
